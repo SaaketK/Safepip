@@ -103,7 +103,7 @@ def vet_package(package_name):
             choice = input(f"Switch to '{target}'? (y/n): ")
             if choice.lower() == 'y':
                 return True, target
-            return False, package_name
+            return True, package_name
 
     print(f"Querying PyPI for '{package_name}'")
     url = f"https://pypi.org/pypi/{package_name}/json"
