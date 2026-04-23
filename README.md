@@ -15,7 +15,7 @@ Safepip is a security-focused wrapper for the Python package installer (pip). It
 To install Safepip for development and local use:
 
 1. Clone the repository:
-   git clone https://github.com/yourusername/safepip.git
+   git clone https://github.com/SaaketK/Safepip.git
 
 2. Navigate to the project directory:
    cd safepip
