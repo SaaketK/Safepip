@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "safepip"
+version = "0.1.0"
+description = "pip wrapper with C-based typo detection and presents package metadata and github data prior to installation."
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "requests",
+]
+authors = [{name = "Saaket Kulkarni", email = "saaket.bgk@gmail.com"}]
+
+[project.scripts]
+safepip = "safepip.main:main"
+safepip-constupdate = "safepip.updateconstants:update_top_packages"

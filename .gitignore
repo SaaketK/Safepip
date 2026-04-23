@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+build/
+dist/
+*.egg-info/
+
+# C / Compiled
+*.so
+*.dylib
+*.o
+
+# OS
+.DS_Store
