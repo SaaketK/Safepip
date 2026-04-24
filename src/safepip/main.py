@@ -89,21 +89,46 @@ def get_github_stats(info):
 
 def vet_package(package_name):
     # Typo Detection using C
-    for target in POPULAR_PACKAGES:
-        # Don't check if it's an exact match
-        if package_name == target:
-            break
+    # Collect all potential matches first
+    # 1. Collect all potential matches first via C engine
+    matches = [target for target in POPULAR_PACKAGES
+               if get_edit_distance(package_name, target) <= 2]
 
-        dist = get_edit_distance(package_name, target)
+    if not matches:
+        # Proceed to PyPI check if no typos found
+        pass
+    elif len(matches) == 1:
+        # Simple case: Only one match
+        target = matches[0]
+        print(f"\nALERT: You typed '{package_name}'.")
+        print(f"Did you mean the official '{target}' package?")
+        if input(f"Switch to '{target}'? (y/n): ").lower() == 'y':
+            package_name = target
+    else:
+        # 2. Multi-match case: Offer the [y]es, [n]o, [a]ll menu
+        target = matches[0]
+        print(f"\nALERT: You typed '{package_name}'.")
+        print(f"First match: '{target}'")
+        choice = input(f"Switch to '{target}'? [y]es / [n]o / see [a]ll {len(matches)} matches: ").lower()
 
-        # If Levenshtein Distance <= 2, suggest target package
-        if dist <= 2:
-            print(f"ALERT: You typed '{package_name}'.")
-            print(f"Did you mean the official '{target}' package?")
-            choice = input(f"Switch to '{target}'? (y/n): ")
-            if choice.lower() == 'y':
-                return True, target
-            return True, package_name
+        if choice == 'y':
+            return True, target
+        elif choice == 'a':
+            # 3. Display the numbered menu
+            print(f"\nAll potential matches for '{package_name}':")
+            for idx, name in enumerate(matches, 1):
+                print(f"{idx}) {name}")
+
+            try:
+                selection = input(f"\nSelect a number (1-{len(matches)}) or 'c' to cancel: ")
+                if selection.lower() == 'c':
+                    return False, package_name
+
+                selected_idx = int(selection) - 1
+                if 0 <= selected_idx < len(matches):
+                    package_name = matches[selected_idx]
+            except ValueError:
+                print("Invalid input. Proceeding with original name.")
 
     print(f"Querying PyPI for '{package_name}'")
     url = f"https://pypi.org/pypi/{package_name}/json"
