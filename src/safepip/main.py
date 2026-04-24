@@ -112,7 +112,7 @@ def vet_package(package_name):
         choice = input(f"Switch to '{target}'? [y]es / [n]o / see [a]ll {len(matches)} matches: ").lower()
 
         if choice == 'y':
-            return True, target
+            package_name = target
         elif choice == 'a':
             # 3. Display the numbered menu
             print(f"\nAll potential matches for '{package_name}':")
