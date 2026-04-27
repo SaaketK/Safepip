@@ -1,70 +1,65 @@
-# Safepip
+# safepip
 
-Safepip is a security-focused wrapper for the Python package installer (pip). It introduces a vetting layer designed to protect developers from typosquatting attacks and malicious package injections by analyzing metadata and performing local heuristic checks before any installation occurs.
+A small wrapper around `pip install` that does a few sanity checks before letting the install go through. The main thing it's good for is catching typo-squats — if you type `requets` instead of `requests`, safepip notices and asks before installing the wrong thing.
 
-## Key Features
+It also pulls some basic metadata from PyPI and GitHub so you can eyeball whether the package looks legitimate before pulling it onto your machine.
 
-- **C-Powered Typo Detection:** Utilizes a custom Levenshtein Distance engine written in C for high-performance string comparison against popular packages.
-- **Automated Intelligence Updates:** Includes a dedicated utility to synchronize the local security watchlist with the latest top 1,000 PyPI packages.
-- **Metadata Inspection:** Retrieves and displays package summaries, author information, and creation dates directly from the PyPI JSON API.
-- **GitHub Integration:** Fetches repository statistics (stars, forks, open issues) to help gauge the reputation of the software source.
-- **Security Heuristics:** Flags packages that have been updated within the last seven days to alert users of potential "release hijacking" risks.
+## What it checks
 
-## Installation
+- Edit distance against the top 1,000 PyPI packages, so common typos get flagged.
+- The PyPI metadata for the package: summary, author, creation date, last update.
+- If the project links to a GitHub repo, stars / forks / open issues from the GitHub API.
+- Whether the package was updated in the last 7 days. A very fresh release on a popular name is worth a second look — it could be a release-hijacking attempt.
 
-To install Safepip for development and local use:
+If nothing looks off and you confirm, safepip shells out to the real `pip install`.
 
-1. Clone the repository:
-   git clone https://github.com/SaaketK/Safepip.git
+## Installing
 
-2. Navigate to the project directory:
-   cd safepip
+Clone and install in editable mode:
 
-3. Install the package in editable mode:
-   pip install -e .
+```
+git clone https://github.com/SaaketK/Safepip.git
+cd safepip
+pip install -e .
+```
 
-The installation process automatically compiles the C-extension (`distance_lib`) and maps the command-line entry points.
+The install compiles a small C extension that does the edit-distance check.
 
 ## Usage
 
-### Vetting and Installing Packages
-Use the `safepip` command followed by the name of the package you wish to inspect:
-
+```
 safepip <package_name>
+```
 
-Example:
+For example:
+
+```
 safepip gunicor
+```
 
-If a typo is detected (e.g., 'gunicor' instead of 'gunicorn'), the tool will prompt you to switch to the official package before proceeding.
+If safepip thinks you meant `gunicorn`, it'll ask before switching. Version pins like `safepip requests==2.31.0` also work — the typo check runs against the bare name and the version pin is passed through to pip.
 
-### Updating the Security Watchlist
-To ensure the typo detection engine is checking against the most current high-traffic packages, run the update utility:
+## Updating the popular-package list
 
-safepip-update
+The list of popular packages lives in `src/safepip/constants.py`. To refresh it from the live PyPI download stats:
 
-## How It Works
+```
+safepip-constupdate
+```
 
-### The C-Extension Engine
-The core logic for string comparison resides in `src/safepip/distance.c`. By offloading the Levenshtein Distance calculation to a compiled C library, Safepip can iterate through the top 1,000 most popular packages in a fraction of a millisecond. Python interfaces with this binary using the `ctypes` library, which dynamically loads the `.so` or `.dylib` file at runtime.
+This pulls the current top 1,000 from `hugovk.dev/top-pypi-packages` and rewrites `constants.py` in place.
 
-### Automated Constants Synchronization
-The `safepip-constupdate` command executes a maintenance script that performs the following steps:
-1. Connects to the hugovk.dev PyPI stats API.
-2. Extracts the top 1,000 project names by download volume.
-3. Overwrites `src/safepip/constants.py` with the fresh data.
-This allows the security heuristics to remain effective against the ever-changing landscape of popular Python software.
+## Project layout
 
-### The Vetting Pipeline
-When a package name is provided:
-1. **Local Check:** The string is cross-referenced with the popular package list via the C engine.
-2. **Network Query:** If no typo is suspected or the user proceeds, Safepip queries the PyPI JSON API.
-3. **Reputation Analysis:** The tool calculates the age of the release and attempts to locate the linked GitHub repository to pull live health metrics.
-4. **Execution:** Only after explicit user confirmation does the tool invoke `subprocess` to run the actual `pip install` command.
+- `src/safepip/main.py` — CLI entry point and the vetting logic.
+- `src/safepip/distance.c` — Levenshtein distance in C, called from Python via `ctypes`.
+- `src/safepip/updateconstants.py` — refreshes the popular-package list.
+- `src/safepip/constants.py` — the popular-package list (auto-generated by the script above).
+- `setup.py` — declares the C extension build.
+- `pyproject.toml` — package metadata and entry points.
 
-## Project Structure
+## How the C extension gets loaded
 
-- `src/safepip/main.py`: The primary entry point and application logic.
-- `src/safepip/distance.c`: The C implementation for edit-distance algorithms.
-- `src/safepip/update_constants.py`: The synchronization utility for the watchlist.
-- `src/safepip/constants.py`: The data store for the top 1,000 package names.
-- `pyproject.toml`: Defines the build system and command-line entry points.
+At runtime, `main.py` looks in the package directory for a file with `distance` in the name and a `.so`, `.dylib`, or `.pyd` suffix, then loads it with `ctypes.CDLL`. That way the same code works on Linux, macOS, and Windows without any platform-specific imports.
+
+If the library can't be found or fails to load, safepip prints a warning and falls back to running without typo detection — it'll still do the PyPI / GitHub checks.
