@@ -1,19 +1,16 @@
 # safepip
 
-A small wrapper around `pip install` that does a few sanity checks before letting the install go through. The main thing it's good for is catching typo-squats — if you type `requets` instead of `requests`, safepip notices and asks before installing the wrong thing.
-
-It also pulls some basic metadata from PyPI and GitHub so you can eyeball whether the package looks legitimate before pulling it onto your machine.
+A small wrapper around `pip install` that helps you ensure you are installing the package they intend to install. One of the security issues this tool aims to combat is typosquatting which is when malicious packages can have names that resemble popular packages but with a small typo. The input is checked to see if it could be a possible typo of any of the packages in the top 1000 most popular pyPI packages to help prevent typosquatting. Additionally, the pyPI and GitHub metadata, if found, are displayed so you can eyeball whether the package is legitimate before installation.  
 
 ## What it checks
 
-- Edit distance against the top 1,000 PyPI packages, so common typos get flagged.
+- Levenshtein distance against the top 1,000 PyPI packages, so common typos get flagged.
 - The PyPI metadata for the package: summary, author, creation date, last update.
 - If the project links to a GitHub repo, stars / forks / open issues from the GitHub API.
-- Whether the package was updated in the last 7 days. A very fresh release on a popular name is worth a second look — it could be a release-hijacking attempt.
 
-If nothing looks off and you confirm, safepip shells out to the real `pip install`.
+If nothing looks off and you confirm, safepip runs the real `pip install` command for your package.
 
-## Installing
+## Installation
 
 Clone and install in editable mode:
 
@@ -23,7 +20,7 @@ cd safepip
 pip install -e .
 ```
 
-The install compiles a small C extension that does the edit-distance check.
+The install compiles a small C extension that does the levenshtein-distance check.
 
 ## Usage
 
@@ -60,6 +57,6 @@ This pulls the current top 1,000 from `hugovk.dev/top-pypi-packages` and rewrite
 
 ## How the C extension gets loaded
 
-At runtime, `main.py` looks in the package directory for a file with `distance` in the name and a `.so`, `.dylib`, or `.pyd` suffix, then loads it with `ctypes.CDLL`. That way the same code works on Linux, macOS, and Windows without any platform-specific imports.
+At runtime, `main.py` looks in the package directory for a file with `distance` in the name and a `.so`, `.dylib`, or `.pyd` suffix, then loads it with `ctypes.CDLL`. This way, the same code works on Linux, macOS, and Windows without any platform-specific imports.
 
-If the library can't be found or fails to load, safepip prints a warning and falls back to running without typo detection — it'll still do the PyPI / GitHub checks.
+If the library can't be found or fails to load, safepip prints a warning and falls back to running without typo detection, but everything else like the pyPI and GitHub metadata will still be displayed.
