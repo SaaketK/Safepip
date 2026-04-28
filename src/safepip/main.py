@@ -107,42 +107,40 @@ def get_github_stats(info):
 
 def vet_package(package_name):
     # Typo Detection using C
-    # 1. Collect all potential matches first via C engine
-    matches = [target for target in POPULAR_PACKAGES
-               if get_edit_distance(package_name, target) <= 2]
+    if package_name not in POPULAR_PACKAGES:
+        matches = [target for target in POPULAR_PACKAGES
+            if 0 < get_edit_distance(package_name, target) <= 2]
 
-    if len(matches) == 1:
-        # Simple case: Only one match
-        target = matches[0]
-        print(f"\nALERT: You typed '{package_name}'.")
-        print(f"Did you mean the official '{target}' package?")
-        if input(f"Switch to '{target}'? (y/n): ").lower() == 'y':
-            package_name = target
-    elif len(matches) > 1:
-        # 2. Multi-match case: Offer the [y]es, [n]o, [a]ll menu
-        target = matches[0]
-        print(f"\nALERT: You typed '{package_name}'.")
-        print(f"First match: '{target}'")
-        choice = input(f"Switch to '{target}'? [y]es / [n]o / see [a]ll {len(matches)} matches: ").lower()
+        if len(matches) == 1:
+            # Simple case: Only one match
+            target = matches[0]
+            print(f"\nALERT: You typed '{package_name}'.")
+            print(f"Did you mean the official '{target}' package?")
+            if input(f"Switch to '{target}'? (y/n): ").lower() == 'y':
+                package_name = target
+        elif len(matches) > 1:
+            # 2. Multi-match case: Offer the [y]es, [n]o, [a]ll menu
+            target = matches[0]
+            print(f"\nALERT: You typed '{package_name}'.")
+            print(f"First match: '{target}'")
+            choice = input(f"Switch to '{target}'? [y]es / [n]o / see [a]ll {len(matches)} matches: ").lower()
+            if choice == 'y':
+                package_name = target
+            elif choice == 'a':
+                # 3. Display the numbered menu
+                print(f"\nAll potential matches for '{package_name}':")
+                for idx, name in enumerate(matches, 1):
+                    print(f"{idx}) {name}")
 
-        if choice == 'y':
-            package_name = target
-        elif choice == 'a':
-            # 3. Display the numbered menu
-            print(f"\nAll potential matches for '{package_name}':")
-            for idx, name in enumerate(matches, 1):
-                print(f"{idx}) {name}")
-
-            try:
-                selection = input(f"\nSelect a number (1-{len(matches)}) or 'c' to cancel: ")
-                if selection.lower() == 'c':
-                    return False, package_name
-
-                selected_idx = int(selection) - 1
-                if 0 <= selected_idx < len(matches):
-                    package_name = matches[selected_idx]
-            except ValueError:
-                print("Invalid input. Proceeding with original name.")
+                try:
+                    selection = input(f"\nSelect a number (1-{len(matches)}) or 'c' to cancel: ")
+                    if selection.lower() == 'c':
+                        return False, package_name
+                    selected_idx = int(selection) - 1
+                    if 0 <= selected_idx < len(matches):
+                        package_name = matches[selected_idx]
+                except ValueError:
+                    print("Invalid input. Proceeding with original name.")
 
     print(f"Querying PyPI for '{package_name}'")
     url = f"https://pypi.org/pypi/{urllib.parse.quote(package_name, safe='')}/json"
