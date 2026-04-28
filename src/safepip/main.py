@@ -135,10 +135,11 @@ def vet_package(package_name):
                 try:
                     selection = input(f"\nSelect a number (1-{len(matches)}) or 'c' to cancel: ")
                     if selection.lower() == 'c':
-                        return False, package_name
-                    selected_idx = int(selection) - 1
-                    if 0 <= selected_idx < len(matches):
-                        package_name = matches[selected_idx]
+                        pass
+                    else:
+                        selected_idx = int(selection) - 1
+                        if 0 <= selected_idx < len(matches):
+                            package_name = matches[selected_idx]
                 except ValueError:
                     print("Invalid input. Proceeding with original name.")
 
