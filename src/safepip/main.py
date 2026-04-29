@@ -112,14 +112,14 @@ def vet_package(package_name):
             if 0 < get_edit_distance(package_name, target) <= 2]
 
         if len(matches) == 1:
-            # Simple case: Only one match
+            # Only one match case:
             target = matches[0]
             print(f"\nALERT: You typed '{package_name}'.")
             print(f"Did you mean the official '{target}' package?")
             if input(f"Switch to '{target}'? (y/n): ").lower() == 'y':
                 package_name = target
         elif len(matches) > 1:
-            # 2. Multi-match case: Offer the [y]es, [n]o, [a]ll menu
+            # 2. Multi-match case:
             target = matches[0]
             print(f"\nALERT: You typed '{package_name}'.")
             print(f"First match: '{target}'")
@@ -127,7 +127,6 @@ def vet_package(package_name):
             if choice == 'y':
                 package_name = target
             elif choice == 'a':
-                # 3. Display the numbered menu
                 print(f"\nAll potential matches for '{package_name}':")
                 for idx, name in enumerate(matches, 1):
                     print(f"{idx}) {name}")
@@ -196,13 +195,6 @@ def vet_package(package_name):
     else:
         print("WARNING: No GitHub repository linked")
 
-    # Security Warning Logic
-    if "T" in last_upload_raw:
-        updated_dt = datetime.fromisoformat(last_upload_raw.replace('Z', '+00:00'))
-        days_ago = (datetime.now(updated_dt.tzinfo) - updated_dt).days
-        if days_ago < 7:
-            print(f"CAUTION: This package was updated very recently - ({days_ago} days ago)")
-
     confirm = input(f"\nProceed with installation? (y/n): ")
     return confirm.lower() == 'y', package_name
 
@@ -224,7 +216,7 @@ def main():
         sys.exit(1)
 
     # Preserve version pins/extras from the original spec unless the user
-    # accepted a typo correction, in which case install the corrected name.
+    # accepted a typo correction in which case install the corrected name.
     install_target = final_name if final_name != name else spec
 
     if is_installed(final_name):

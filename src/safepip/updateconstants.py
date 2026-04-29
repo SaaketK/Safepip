@@ -14,8 +14,8 @@ def update_top_packages(count=1000):
         response.raise_for_status()
         data = response.json()
 
-        # Validate names before writing — the watchlist is compared against
-        # user input, so a malformed entry would turn into a bad suggestion.
+        # Validate names before writing, the watchlist is compared against
+        # user input so a malformed entry would turn into a bad suggestion.
         top_names = [
             row['project'] for row in data['rows'][:count]
             if _NAME_RE.match(row.get('project', ''))
