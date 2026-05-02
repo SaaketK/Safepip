@@ -1,6 +1,6 @@
 # safepip
 
-A small wrapper around `pip install` that helps you ensure you are installing the package they intend to install. One of the security issues this tool aims to combat is typosquatting which is when malicious packages can have names that resemble popular packages but with a small typo. The input is checked to see if it could be a possible typo of any of the packages in the top 1000 most popular pyPI packages to help prevent typosquatting. Additionally, the pyPI and GitHub metadata, if found, are displayed so you can eyeball whether the package is legitimate before installation.  
+A small wrapper around `pip install` that helps ensure users are installing the package that they intend to install. One of the security issues this tool aims to combat is typosquatting which is when malicious packages can have names that resemble popular packages but with a small typo. The input is checked to see if it could be a possible typo of any of the packages in the top 1000 most popular pyPI packages to help prevent typosquatting. Additionally, the pyPI and GitHub metadata, if found, are displayed so you can eyeball whether the package is legitimate before installation.  
 
 ## What it checks
 
